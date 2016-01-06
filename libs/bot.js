@@ -1,35 +1,49 @@
 'use strict';
 const mumble = require('mumble');
-const config = require('./config');
 const join = require('oxford-join');
+// const triggers = require('./triggers');
 
-console.log('connecting');
-mumble.connect(config.server, config.options, function(error, client) {
-  if(error) { throw new Error(error); }
-  console.log('connected');
-  let self = client;
+function Collins(config) {
+  this.config = config;
+  this.debug = config.debug;
 
-  client.authenticate(config.username, config.password);
-  client.on('initialized', onInit);
-  client.on('error', function(data) { console.log('error', data); });
-  client.on('disconnect', onDisconn);
+  // TODO: is this the right place for this?
+  this.triggers = require('./triggers');
+}
 
-  // TEST: testing raw data
-  // client.on('protocol-in', onAll);
-  // client.on('protocol-out', onAll);
-  client.on('ready', onReady.bind(self));
-  client.on('message', onMessage.bind(self));
-  client.on('user-connect', onUserConn);
-});
+
 /**
- * @summary function to speak with
+ * @summary function to log collins to console with
  *
  * @param {message} String - The message to speak.
  */
-function say(message) {
-  let args = Array.prototype.slice.call(arguments);
-  let prefix = '>>> Collins >>> ';
-  console.log(prefix + join(args));
+Collins.prototype.log = function(data) {
+  console.log('>> Collins: ' + data);
+};
+
+Collins.prototype.start = function(callback) {
+  let self = this;
+  self.cb = (callback) ? callback : new Function();
+
+  self.log('connecting');
+
+  mumble.connect(self.config.server, self.config.options, mumbleCB.bind(self));
+
+  function mumbleCB(error, client) {
+    if(error) { throw new Error(error); }
+    let self = this;
+    self.log('connected');
+
+    self.log('authing');
+    client.authenticate(self.config.username, self.config.password);
+    client.on('initialized', onInit.bind(self));
+    client.on('error', function(data) { console.log('error', data); });
+    client.on('disconnect', onDisconn.bind(self));
+
+    client.on('ready', onReady.bind(self, client));
+    client.on('message', onMessage.bind(client));
+    client.on('user-connect', onUserConn);
+  }
 };
 
 function onUserConn(user) {
@@ -39,9 +53,9 @@ function onUserConn(user) {
 function onMessage(message, user, scope) {
   let self = this;
 
-  say('received a message, sir');
-  say('from: ', user.name, user.id, user.session);
-  say('it reads: ' + message);
+  // say('received a message, sir');
+  // say('from: ', user.name, user.id, user.session);
+  // say('it reads: ' + message);
 
   // TEST: testing vars
   // console.log('message', message);
@@ -52,30 +66,32 @@ function onMessage(message, user, scope) {
 };
 
 function onInit() {
-  console.log('connection initialized');
+  let self = this;
+  self.log('authed + connection initialized');
 };
 
 function onDisconn() {
-  console.log('disconnected');
+  let self = this;
+  self.log('disconnected');
   process.exit(12);
 };
 
-function onReady() {
+function onReady(client) {
   var self = this;
-  say('at your service');
-  let recipients = {
-    session: 74
-  };
-  self.sendMessage('at your service', recipients);
+  self.log('at your service');
+  // let recipients = {
+  //   session: 74
+  // };
+  // self.sendMessage('at your service', recipients);
 
-  var users = self.users();
-  users.forEach(function(user) {
-    console.log(
-      'id', user.id,
-      'name', user.name,
-      'session', user.session
-    );
-  });
+  // var users = self.users();
+  // users.forEach(function(user) {
+  //   console.log(
+  //     'id', user.id,
+  //     'name', user.name,
+  //     'session', user.session
+  //   );
+  // });
 };
 
 // INFO: used for testing
@@ -83,3 +99,4 @@ function onAll(data) {
   console.log('event', data.handler, 'data', data.message);
 };
 
+module.exports = Collins;
