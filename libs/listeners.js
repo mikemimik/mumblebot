@@ -51,13 +51,11 @@ exports.onMessage = function(message, user, scope, client) {
   // INFO: populate payload
   payload.text = message;
   if (scope === 'private') {
-    console.log('>> TESTING: inside if (private) >> ', user.name);
     payload.from.user.name = user.name;
     payload.from.user.id = user.id;
     payload.from.user.session = user.session;
     payload.to = user.id;
   } else {
-    console.log('>> TESTING: inside else (channel) >> ', user.channel.name);
     payload.from.channel.name = user.channel.name;
     payload.from.channel.id = user.channel.id;
     payload.to = user.session;
