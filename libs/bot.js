@@ -1,6 +1,5 @@
 'use strict';
 const mumble = require('mumble');
-const join = require('oxford-join');
 const _ = require('lodash');
 const async = require('async');
 const listeners = require('./listeners');
@@ -59,11 +58,11 @@ Collins.prototype.start = function(callback) {
 
     self.log('authing');
     client.authenticate(self.config.username, self.config.password);
-    client.on('initialized', onInit.bind(self));
+    client.on('initialized', listeners.onInit.bind(self));
     client.on('error', function(data) { console.log('error', data); });
-    client.on('disconnect', onDisconn.bind(self));
+    client.on('disconnect', listeners.onDisconn.bind(self));
 
-    client.on('ready', onReady.bind(self, client));
+    client.on('ready', listeners.onReady.bind(self));
 
     /**
      * INFO:
@@ -73,9 +72,9 @@ Collins.prototype.start = function(callback) {
      *    - client: instance of
      */
     // TODO: clean this up
-    client.on('message', _.bind(onMessage, self, _, _, _, client));
-    client.on('user-connect', _.bind(listeners.onUserConn, self));
-    // client.on('protocol-in', onAll);
+    client.on('message', _.bind(listeners.onMessage, self, _, _, _, client));
+    client.on('user-connect', listeners.onUserConn.bind(self));
+    // client.on('protocol-in', onAll); // INFO: used for testing
   }
 };
 
