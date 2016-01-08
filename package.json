@@ -1,6 +1,6 @@
 {
   "name": "mumblebot",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "a bot for mumble",
   "main": "app.js",
   "scripts": {
