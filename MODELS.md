@@ -3,6 +3,16 @@ USER
   - name: String
   - id: Number
   - channel: CHANNEL
+  - mute: Boolean
+  - deaf: Boolean
+  - suppress: Boolean
+  - selfMute: Boolean
+  - selfDeaf: Boolean
+  - hash: String
+  - recording: Boolean
+  - prioritySpeaker: Boolean
+  - _events: Object or Array?
+  - _eventCount: Number?
 
 CHANNEL
   - links: []
