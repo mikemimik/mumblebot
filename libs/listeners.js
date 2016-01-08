@@ -34,9 +34,7 @@ exports.onMessage = function(message, user, scope, client) {
     to: null,
   };
 
-  /**
-   * Parse the incoming message for triggers
-   */
+  // INFO: parse the incoming message
   let actions = message.match(token);
 
   // INFO: filter off the bang ('!')
