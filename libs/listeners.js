@@ -1,5 +1,5 @@
 'use strict';
-
+const _ = require('lodash');
 // INFO: eventually all custom event listeners will live here
 /**
  * exports.onMessage = function( ... params ... ) {
