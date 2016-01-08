@@ -46,7 +46,7 @@ Collins.prototype.start = function(callback) {
   let self = this;
   self.cb = (callback) ? callback : new Function();
 
-  self.log('connecting');
+  self.log('Sir, I\'m attempting to connect.');
 
   mumble.connect(self.config.server, self.config.options, mumbleCB.bind(self));
 
@@ -54,9 +54,9 @@ Collins.prototype.start = function(callback) {
   function mumbleCB(error, client) {
     if(error) { throw new Error(error); }
     let self = this;
-    self.log('connected');
+    self.log('I\'ve connected, sir.');
 
-    self.log('authing');
+    self.log('The server requires authentication.');
     client.authenticate(self.config.username, self.config.password);
     client.on('initialized', listeners.onInit.bind(self));
     client.on('error', function(data) { console.log('error', data); });
