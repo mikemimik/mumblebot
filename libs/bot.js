@@ -138,16 +138,6 @@ function onMessage(message, user, scope, client) {
   // INFO: take action
   // TODO: make this async
   _.each(actionable, _.bind(self.doTrigger, self, _, payload, client));
-
-  // TEST: testing vars
-  /* Testing - Block - Start */
-  // console.log('message', message);
-  // console.log('user', user);
-  // // client, session, name, id, mute, deaf, suppress, selfMute, selfDeaf
-  // // hash, recording, prioritySpeaker, channel, _events, _eventCount
-  // console.log('scope', scope);
-  /* Testing - Block - End */
-
 };
 
 Collins.prototype.doTrigger = function(trigger, payload, client) {
@@ -174,19 +164,6 @@ function onDisconn() {
 function onReady(client) {
   var self = this;
   self.log('at your service');
-  // let recipients = {
-  //   session: 74
-  // };
-  // self.sendMessage('at your service', recipients);
-
-  // var users = self.users();
-  // users.forEach(function(user) {
-  //   console.log(
-  //     'id', user.id,
-  //     'name', user.name,
-  //     'session', user.session
-  //   );
-  // });
 };
 
 // INFO: used for testing
