@@ -91,7 +91,7 @@ Collins.prototype.doTrigger = function(trigger, payload, client) {
 // INFO: used for testing
 function onAll(data) {
   if (data.handler !== 'ping'
-    && data.handler !== 'userState'
+    // && data.handler !== 'userState'
     && data.handler !== 'channelState'
     && data.handler !== 'serverSync'
     && data.handler !== 'cryptSetup') {
