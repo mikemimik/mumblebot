@@ -1,7 +1,9 @@
 'use strict';
+const fs = require('fs');
 const mumble = require('mumble');
 const _ = require('lodash');
 const async = require('async');
+const CollinsError = require('./CollinsError');
 const listeners = require('./listeners');
 // const triggers = require('./triggers');
 
@@ -9,6 +11,44 @@ const listeners = require('./listeners');
 function Collins(config) {
   this.config = config;
   this.debug = config.debug;
+  this._initDone = false;
+
+  // INFO: we're making assumptions here
+  if (this.config.ssl) {
+
+    // INFO: the object is a thing, check the keys
+    async.forEachof(this.config.ssl, (value, key, callback) => {
+      if (key !== 'key' && key !== 'cert') {
+        let error = new CollinsError('ConfigError', 'Incorrect \'ssl\' config object');
+        callback(error);
+      } else if (key === 'key' || key === 'cert') {
+        fs.readFile(value, 'utf8', function(err, data) {
+          if (err) {
+            let error = new CollinsError('FileReadError', err);
+            callback(error);
+          } else {
+
+            // NOTE: we are assuming data is a *.pem file
+            this.config.ssl[key] = data;
+            callback();
+          }
+        });
+      }
+    }, (err) => {
+      if (err) {
+
+        // INFO: check to see if we made this error
+        if (err instanceof CollinsError) {
+          throw err;
+        } else {
+
+          // INFO: we didn't, so throw CollinsError
+          throw new CollinsError('ConfigError', err);
+        }
+      }
+      this._initDone = true;
+    }); // INFO: done async
+  } // INFO: done config setup
 
   // TODO: is this the right place for this?
   this.triggers = require('./triggers');
@@ -42,13 +82,18 @@ Collins.prototype.log = function(data) {
   }
 };
 
+Collins.prototype.use = function(plugin) {
+
+};
+
+// TODO: find the appropriate place to call the callback
 Collins.prototype.start = function(callback) {
   let self = this;
   self.cb = (callback) ? callback : new Function();
 
   self.log('Sir, I\'m attempting to connect.');
 
-  mumble.connect(self.config.server, self.config.options, mumbleCB.bind(self));
+  mumble.connect(self.config.server, self.config.ssl, mumbleCB.bind(self));
 
   // INFO: All behaviour for Collins lives here
   function mumbleCB(error, client) {
