@@ -17,7 +17,7 @@ function Collins(config) {
   if (this.config.ssl) {
 
     // INFO: the object is a thing, check the keys
-    async.forEachof(this.config.ssl, (value, key, callback) => {
+    async.forEachOf(this.config.ssl, (value, key, callback) => {
       if (key !== 'key' && key !== 'cert') {
         let error = new CollinsError('ConfigError', 'Incorrect \'ssl\' config object');
         callback(error);
