@@ -71,7 +71,7 @@ class Loader {
       }
 
       // INFO: create parellel async function to house all async calls
-      async.parellel([
+      async.parallel([
         (par_cb) => {
 
           // INFO: check that it only has two properties and that they are 'key' and 'cert'
