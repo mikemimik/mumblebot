@@ -1,3 +1,9 @@
+/**
+ * Collins Module
+ * @module collins
+ * @see module:collins
+ */
+
 'use strict';
 const fs = require('fs');
 const mumble = require('mumble');
@@ -133,7 +139,7 @@ Collins.prototype.init = function() {
 /**
  * @summary function to log collins to console with meant for testing
  *
- * @param {message} String - The message to speak.
+ * @param {object} data The message to speak.
  */
 Collins.prototype.log = function(data) {
   let prefix = '>> Collins: ';
@@ -157,6 +163,11 @@ Collins.prototype.log = function(data) {
   }
 };
 
+/**
+ * @summary function to add a plugin (middleware)
+ *
+ * @param {object} plugin The plugin module to include
+ */
 Collins.prototype.use = function(plugin) {
   this.plugins.push(plugin);
 };
