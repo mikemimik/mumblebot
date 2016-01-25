@@ -9,7 +9,7 @@
   },
   "bugs": {
     "url": "https://github.com/mikemimik/mumblebot/issues"
-  }
+  },
   "engines": {
     "node": ">=4.2.4"
   },
