@@ -25,6 +25,7 @@
   "dependencies": {
     "async": "^1.5.1",
     "lodash": "^3.10.1",
-    "mumble": "rantanen/node-mumble"
+    "mumble": "rantanen/node-mumble",
+    "wildcards": "^1.0.2"
   }
 }
