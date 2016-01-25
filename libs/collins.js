@@ -34,83 +34,12 @@ Util.inherits(Collins, Emitter.EventEmitter);
  *
  */
 Collins.prototype.init = function() {
-  let tasks = {
-    'config:ssl': false,
-    'plugins': false
-  };
 
-  /**
-   * @summary Function to call all events starting with 'init:'
-   */
-  events(this, 'init:*', (event, err, context) => {
-    console.log('>>', 'event:', event, 'err:', err);
+  // INFO: start loading
+  Loader.start(this);
+  Loader.initializeConfig(this);
 
-    // INFO: component is the _actual_ event emitted
-    let component = event.slice(event.indexOf(':')+1, event.length);
 
-    // INFO: 'check off' task as complete
-    if (_.has(tasks, component)) { tasks[component] = true; }
-
-    // INFO: asyncly check all tasks
-    async.forEachOf(tasks, (checked, task, eachOf_cb) => {
-
-      // INFO: check value of task, if false; error
-      if (!checked) {
-        eachOf_cb('not:done');
-      } else {
-        eachOf_cb(null);
-      }
-    }, (eachOf_err) => {
-
-      // INFO: no error, emit done event
-      if (!eachOf_err) {
-        context.emit('done:init');
-      }
-    });
-  });
-
-  /**
-   * INITIALIZE CONFIG FILE
-   */
-  // INFO: we're making assumptions here
-  if (this.config.ssl) {
-
-    // INFO: the object is a thing, check the keys
-    async.forEachOf(this.config.ssl, (value, key, callback) => {
-      if (key !== 'key' && key !== 'cert') {
-        let error = new CollinsError('ConfigError', 'Incorrect \'ssl\' config object');
-        callback(error);
-      } else if (key === 'key' || key === 'cert') {
-        fs.readFile(value, 'utf8', (err, data) => {
-          if (err) {
-            let error = new CollinsError('FileReadError', err);
-            callback(error);
-          } else {
-
-            // NOTE: we are assuming data is a *.pem file
-            this.config.ssl[key] = data;
-            callback(null);
-          }
-        });
-      }
-    }, (err) => {
-      if (err) {
-
-        // INFO: check to see if we made this error
-        if (err instanceof CollinsError) {
-          throw err;
-          // this.emit('error', err, self); // TEST
-        } else {
-
-          // INFO: we didn't, so throw CollinsError
-          throw new CollinsError('ConfigError', err);
-          // this.emit('error', new CollinsError('ConfigError', err), this); // TEST
-        }
-      } else {
-        this.emit('init:config:ssl', null, this);
-      }
-    }); // INFO: done async
-  } // INFO: done config:ssl setup
 
   /**
    * INITIALIZE PLUGINS
