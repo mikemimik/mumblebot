@@ -14,11 +14,11 @@ let Collins = function Collins(config) {
   this.config = config;
   this.debug = config.debug;
   this.initialized = false;
+  this.plugins = config.plugins;
+  this.triggers = new Object;
 
-  // TODO: is this the right place for this?
-  this.triggers = require('./triggers');
 };
-Util.inherits(Collins, Events.EventEmitter);
+Util.inherits(Collins, Emitter.EventEmitter);
 
 /**
  * @summary function to initialize Collins
@@ -26,6 +26,43 @@ Util.inherits(Collins, Events.EventEmitter);
  */
 Collins.prototype.init = function() {
 
+  // INFO: can this be here?
+  let tasks = {
+    'config:ssl': false,
+    'plugins': false
+  };
+
+  // TODO: once all init events have been collected, emit 'init:done' event
+  events(this, 'init:*', function(event, err, context) {
+    console.log('>>', 'event:', event, 'err:', err);
+
+    // INFO: is the _actual_ event emitted
+    let component = event.slice(event.indexOf(':')+1, event.length);
+
+    // INFO: 'check off' task as complete
+    if (_.has(tasks, component)) { tasks[component] = true; }
+
+    // INFO: asyncly check all tasks
+    async.forEachOf(tasks, (value, key, eachOf_cb) => {
+
+      // INFO: check value of task, if false; error
+      if (!value) {
+        eachOf_cb('not:done');
+      } else {
+        eachOf_cb(null);
+      }
+    }, (eachOf_err) => {
+
+      // INFO: no error, emit done event
+      if (!eachOf_err) {
+        context.emit('done:init');
+      }
+    });
+  });
+
+  /**
+   * INITIALIZE CONFIG FILE
+   */
   // INFO: we're making assumptions here
   if (this.config.ssl) {
 
@@ -43,7 +80,7 @@ Collins.prototype.init = function() {
 
             // NOTE: we are assuming data is a *.pem file
             this.config.ssl[key] = data;
-            callback();
+            callback(null);
           }
         });
       }
@@ -62,11 +99,35 @@ Collins.prototype.init = function() {
         }
       } else {
         this.initialized = true;
-        this.emit('loaded', null, this);
+        this.emit('init:config:ssl', null, this);
       }
 
     }); // INFO: done async
   } // INFO: done config setup
+
+  /**
+   * INITIZLIZE PLUGINS
+   */
+  async.each(this.plugins, (plugin, each_cb) => {
+
+    // TODO: add triggers from plugin, to this.triggers
+    async.forEachOf(plugin.triggers, (value, key, eachOf_cb) => {
+
+      // TODO: test the plugin and make sure it's correctly formatted
+      this.triggers[key] = value;
+      eachOf_cb(null);
+    }, (eachOf_err) => {
+      if (eachOf_err) {
+        let error = new CollinsError('PluginInitError', eachOf_err);
+        throw error;
+        // this.emit('error', error, this); // TEST
+      }
+      each_cb(null);
+    });
+  }, (each_err) => {
+    // TODO: emit plugins loaded event
+    this.emit('init:plugins', null, this);
+  });
 };
 
 /**
@@ -97,7 +158,7 @@ Collins.prototype.log = function(data) {
 };
 
 Collins.prototype.use = function(plugin) {
-
+  this.plugins.push(plugin);
 };
 
 // TODO: find the appropriate place to call the callback
@@ -139,7 +200,7 @@ Collins.prototype.start = function(callback) {
 
 Collins.prototype.doTrigger = function(trigger, payload, client) {
   let self = this; // INFO: instance of collins
-  var output = self.triggers[trigger];
+  var output = selftriggers[trigger];
   let recipients = {
     session: (payload.from.user.session) ? [ payload.from.user.session] : [],
     channel_id: (payload.from.channel.id) ? [ payload.from.channel.id ] : []
