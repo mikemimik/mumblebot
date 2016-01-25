@@ -129,13 +129,58 @@ class Loader {
       }, (each_err) => {
         context.emit('init:plugins', null, context);
       });
-    }
+    };
   }
 
   static initializeTriggers(context) {
-    context.log('Initializing Triggers...');
-    async.each(context.plugins, (plugin, plugin_cb) => {
-      async.forEachOf(plugin.triggers, (action, trigger, trigger_cb) => {
+    if (context.Runtime.configurationTasks.plugins) {
+
+      // INFO: plugins have finished processing
+      context.log('Initializing Triggers...');
+      next(context);
+    } else {
+      context.log('Waiting for Plugins to Process...');
+
+      // INFO: need to wait for plugins to finish loading
+      context.on('init:plugins', (error, context) => {
+        context.log('Initializing Triggers...');
+        next(context);
+      });
+    }
+    function next(context) {
+      async.parallel([
+        (parallel_cb) => {
+
+          // INFO: load default triggers in ./libs/Triggers.js
+          let triggersPath = Path.join(__dirname, '..', 'libs', 'Triggers.js');
+          let loadedTriggers = require(triggersPath);
+          parallel_cb(_.bind(applyTriggers, context, loadedTriggers)());
+        },
+        (parallel_cb) => {
+
+          // INFO: load triggers from plugin array
+          async.each(context.plugins, (plugin, plugin_cb) => {
+            plugin_cb(_.bind(applyTriggers, context, plugin.triggers)());
+          }, (plugin_err) => {
+            if (plugin_err) {
+              let error = new CollinsError('TriggerError', 'Invalid trigger action: ' + plugin_err);
+              parallel_cb(error);
+            } else {
+              parallel_cb(null);
+            }
+
+          });
+        }
+      ], (parallel_err, results) => {
+        if (parallel_err) {
+          throw new CollinsError('TriggerError', 'I don\'t fucking know, mate.');
+        } else {
+          context.emit('init:triggers', null, context);
+        }
+      });
+    };
+    function applyTriggers(triggerObj) {
+      async.forEachOf(triggerObj, (action, trigger, trigger_cb) => {
         if (typeof action !== 'string' && typeof action !== 'function') {
           trigger_cb(trigger);
         } else if (typeof action === 'function') {
@@ -148,18 +193,12 @@ class Loader {
 
         // INFO: if true, trigger threw error, pass to outer async and throw plugin error
         if (trigger_err) {
-          plugin_cb(trigger_err);
+          return trigger_err;
         } else {
-          plugin_cb(null);
+          return null;
         }
       });
-    }, (plugin_err) => {
-      if (plugin_err) {
-        let error = new CollinsError('TriggerError', 'Invalid trigger action: ' + plugin_err);
-        throw error;
-      }
-      context.emit('init:triggers', null, context);
-    });
+    };
   }
 }
 
