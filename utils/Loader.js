@@ -3,6 +3,7 @@ const CollinsError = require('../libs/CollinsError');
 const events = require('wildcards');
 const async = require('async');
 const Path = require('path');
+const fs = require('fs');
 const _ = require('lodash');
 
 class Loader {
@@ -69,7 +70,17 @@ class Loader {
             if (!_.includes(validProps, prop)) {
               each_cb(true);
             } else {
-              each_cb(null);
+              fs.readFile(context.config.ssl[prop], 'utf8', (err, data) => {
+                if (err) {
+                  let error = new CollinsError('FileReadError', err);
+                  throw error;
+                } else {
+
+                  // NOTE: we are assuming data is a *.pem file
+                  context.config.ssl[prop] = data;
+                  each_cb(null);
+                }
+              });
             }
           }, (invalid) => {
             if (invalid) {
