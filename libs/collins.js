@@ -5,7 +5,8 @@ const _ = require('lodash');
 const async = require('async');
 const CollinsError = require('./CollinsError');
 const listeners = require('./listeners');
-const Events = require('events');
+const Emitter = require('events');
+const events = require('wildcards');
 const Util = require('util');
 
 
