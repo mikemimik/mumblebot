@@ -5,13 +5,25 @@ const _ = require('lodash');
 const async = require('async');
 const CollinsError = require('./CollinsError');
 const listeners = require('./listeners');
-// const triggers = require('./triggers');
+const Events = require('events');
+const Util = require('util');
 
 
-function Collins(config) {
+let Collins = function Collins(config) {
   this.config = config;
   this.debug = config.debug;
-  this._initDone = false;
+  this.initialized = false;
+
+  // TODO: is this the right place for this?
+  this.triggers = require('./triggers');
+};
+Util.inherits(Collins, Events.EventEmitter);
+
+/**
+ * @summary function to initialize Collins
+ *
+ */
+Collins.prototype.init = function() {
 
   // INFO: we're making assumptions here
   if (this.config.ssl) {
@@ -40,20 +52,21 @@ function Collins(config) {
         // INFO: check to see if we made this error
         if (err instanceof CollinsError) {
           throw err;
+          // this.emit('error', err, self); // TEST
         } else {
 
           // INFO: we didn't, so throw CollinsError
           throw new CollinsError('ConfigError', err);
+          // this.emit('error', new CollinsError('ConfigError', err), self); // TEST
         }
+      } else {
+        this.initialized = true;
+        this.emit('loaded', null, this);
       }
-      this._initDone = true;
+
     }); // INFO: done async
   } // INFO: done config setup
-
-  // TODO: is this the right place for this?
-  this.triggers = require('./triggers');
 };
-
 
 /**
  * @summary function to log collins to console with meant for testing
