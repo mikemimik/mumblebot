@@ -84,4 +84,5 @@ exports.onDisconn = function() {
 exports.onReady = function() {
   var self = this;
   self.log('At your service, sir');
+  console.log('>>', 'TESTING', 'instance:', self);
 };

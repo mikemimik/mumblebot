@@ -27,9 +27,7 @@ collins.use(tenMan);
 /* TESTING */
 collins.on('done:init', () => {
   console.log('>>', 'APP', 'TESTING', 'done:init');
-  // collins.start((err) => {
-  //   console.log('collins is at your service.');
-  // });
+  collins.start();
 });
 
 // INFO: initialize collins
