@@ -11,16 +11,13 @@ class Loader {
     context.log('Starting Loader...');
 
     /**
-     * @summary Function to call all events starting with 'init:'
+     * @summary Function to handle all events starting with 'init:'
      */
     events(context, 'init:*', (event, err, context) => {
 
       // INFO: listen for all init events
-      console.log('>>', 'CAUGHT EVENT:', event, 'err:', err); // TEST
-
       // INFO: component is the _actual_ event emitted
       let component = event.slice(event.indexOf(':')+1, event.length);
-      console.log('>>', 'CAUGHT EVENT:', 'component:', component); // TEST
 
       // INFO: 'check off' task as complete
       if (_.has(context.Runtime.configurationTasks, component)) {
@@ -40,7 +37,7 @@ class Loader {
 
         // INFO: no error, emit done event
         if (!eachOf_err) {
-          context.emit('done:init');
+          context.emit('done:init', null, context);
         }
       });
     });

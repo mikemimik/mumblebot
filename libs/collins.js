@@ -50,6 +50,12 @@ Util.inherits(Collins, Emitter.EventEmitter);
  */
 Collins.prototype.init = function() {
 
+  // INFO: catch 'done:init' event
+  events(this, 'done:init', (event, err, context) => {
+    context.initialized = true;
+    context.emit('initialized', err, context);
+  });
+
   // INFO: start loading
   Loader.start(this);
   Loader.initializeConfig(this);

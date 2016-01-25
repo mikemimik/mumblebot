@@ -25,8 +25,8 @@ collins.use(tenMan);
 // });
 
 /* TESTING */
-collins.on('done:init', () => {
-  console.log('>>', 'APP', 'TESTING', 'done:init');
+collins.on('initialized', (err, context) => {
+  console.log('>>', 'EVENT', 'initialized');
   collins.start();
 });
 
