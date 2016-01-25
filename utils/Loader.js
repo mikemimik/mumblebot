@@ -55,7 +55,7 @@ class Loader {
     // TODO: check that server uri is valid (regex)
 
     // INFO: set defaults for config
-    _.default(context.config, {
+    _.defaults(context.config, {
       username: 'collins',
       plugins: [],
       debug: false
