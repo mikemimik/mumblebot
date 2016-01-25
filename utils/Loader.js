@@ -60,7 +60,7 @@ class Loader {
 
       // INFO: create parellel async function to house all async calls
       async.parallel([
-        (par_cb) => {
+        (parallel_cb) => {
 
           // INFO: check that it only has two properties and that they are 'key' and 'cert'
           let props = _.keys(context.config.ssl);
@@ -74,15 +74,15 @@ class Loader {
           }, (invalid) => {
             if (invalid) {
               let error = new CollinsError('ConfigError', 'Incorrect \'ssl\' config object.');
-              par_cb(error);
+              parallel_cb(error);
             } else {
-              par_cb(null);
+              parallel_cb(null);
             }
           });
         }
-      ], (par_error, results) => {
-        if (par_error) {
-          throw par_error;
+      ], (parallel_error, results) => {
+        if (parallel_error) {
+          throw parallel_error;
         }
 
         // INFO: all async calls are complete, emit complete
@@ -123,7 +123,32 @@ class Loader {
 
   static initializeTriggers(context) {
     context.log('Initializing Triggers...');
-    // async.forEachOf
+    async.each(context.plugins, (plugin, plugin_cb) => {
+      async.forEachOf(plugin.triggers, (action, trigger, trigger_cb) => {
+        if (typeof action !== 'string' && typeof action !== 'function') {
+          trigger_cb(trigger);
+        } else if (typeof action === 'function') {
+          context.triggers[trigger] = action;
+        } else if (typeof action === 'string') {
+          context.triggers[trigger] = action;
+        }
+        trigger_cb(null);
+      }, (trigger_err) => {
+
+        // INFO: if true, trigger threw error, pass to outer async and throw plugin error
+        if (trigger_err) {
+          plugin_cb(trigger_err);
+        } else {
+          plugin_cb(null);
+        }
+      });
+    }, (plugin_err) => {
+      if (plugin_err) {
+        let error = new CollinsError('TriggerError', 'Invalid trigger action: ' + plugin_err);
+        throw error;
+      }
+      context.emit('init:triggers', null, context);
+    });
   }
 }
 
