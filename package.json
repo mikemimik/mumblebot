@@ -1,19 +1,24 @@
 {
   "name": "mumblebot",
-  "version": "0.1.0",
+  "version": "0.1.8",
   "description": "a bot for mumble",
   "main": "app.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mikemimik/mumblebot.git"
   },
+  "bugs": {
+    "url": "https://github.com/mikemimik/mumblebot/issues"
+  }
+  "engines": {
+    "node": ">=4.2.4"
+  },
   "keywords": [
     "mumble",
     "bot",
-    "node"
+    "node",
+    "chat",
+    "collins"
   ],
   "author": "Michael Perrotte",
   "license": "GPL-2.0",
