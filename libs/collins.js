@@ -22,7 +22,7 @@ function Collins(config) {
         let error = new CollinsError('ConfigError', 'Incorrect \'ssl\' config object');
         callback(error);
       } else if (key === 'key' || key === 'cert') {
-        fs.readFile(value, 'utf8', function(err, data) {
+        fs.readFile(value, 'utf8', (err, data) => {
           if (err) {
             let error = new CollinsError('FileReadError', err);
             callback(error);
