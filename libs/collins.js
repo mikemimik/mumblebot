@@ -6,14 +6,17 @@
 
 'use strict';
 const fs = require('fs');
+const path = require('path');
+const Util = require('util');
 const mumble = require('mumble');
 const _ = require('lodash');
 const async = require('async');
-const CollinsError = require('./CollinsError');
-const listeners = require('./listeners');
 const Emitter = require('events');
 const events = require('wildcards');
-const Util = require('util');
+const CollinsError = require('./CollinsError');
+const listeners = require('./listeners');
+const Loader = require('../utils/Loader');
+
 
 
 let Collins = function Collins(config) {
@@ -31,28 +34,28 @@ Util.inherits(Collins, Emitter.EventEmitter);
  *
  */
 Collins.prototype.init = function() {
-
-  // INFO: can this be here?
   let tasks = {
     'config:ssl': false,
     'plugins': false
   };
 
-  // TODO: once all init events have been collected, emit 'init:done' event
-  events(this, 'init:*', function(event, err, context) {
+  /**
+   * @summary Function to call all events starting with 'init:'
+   */
+  events(this, 'init:*', (event, err, context) => {
     console.log('>>', 'event:', event, 'err:', err);
 
-    // INFO: is the _actual_ event emitted
+    // INFO: component is the _actual_ event emitted
     let component = event.slice(event.indexOf(':')+1, event.length);
 
     // INFO: 'check off' task as complete
     if (_.has(tasks, component)) { tasks[component] = true; }
 
     // INFO: asyncly check all tasks
-    async.forEachOf(tasks, (value, key, eachOf_cb) => {
+    async.forEachOf(tasks, (checked, task, eachOf_cb) => {
 
       // INFO: check value of task, if false; error
-      if (!value) {
+      if (!checked) {
         eachOf_cb('not:done');
       } else {
         eachOf_cb(null);
@@ -101,37 +104,61 @@ Collins.prototype.init = function() {
 
           // INFO: we didn't, so throw CollinsError
           throw new CollinsError('ConfigError', err);
-          // this.emit('error', new CollinsError('ConfigError', err), self); // TEST
+          // this.emit('error', new CollinsError('ConfigError', err), this); // TEST
         }
       } else {
-        this.initialized = true;
         this.emit('init:config:ssl', null, this);
       }
-
     }); // INFO: done async
-  } // INFO: done config setup
+  } // INFO: done config:ssl setup
 
   /**
-   * INITIZLIZE PLUGINS
+   * INITIALIZE PLUGINS
    */
+  console.log('>>', 'TESTING', 'pre', 'triggers:', this.triggers);
+  console.log('>>', 'TESTING', 'pre', 'plugins:', this.plugins);
   async.each(this.plugins, (plugin, each_cb) => {
 
-    // TODO: add triggers from plugin, to this.triggers
-    async.forEachOf(plugin.triggers, (value, key, eachOf_cb) => {
+    // TODO: if plugin is a string, we haven't loaded it yet
+    if (typeof plugin === 'string') {
+      // INFO: we haven't loaded plugin
 
+      let pluginPath = path.join(__dirname, '..', 'plugins', plugin + '.js');
+      let node =
+      // TODO: require file
+      let loadedPlugin = require(pluginPath);
+      this.plugins = _.pull(this.plugins, plugin);
+      this.plugins.push(loadedPlugin);
+
+      // TODO: replace element in array
+    }
+    console.log('>>', 'TESTING', 'inside-each', 'plugin:', plugin);
+    async.forEachOf(plugin.triggers, (action, trigger, eachOf_cb) => {
+
+      console.log('>>', 'TESTING', 'inside-eachOf', 'trigger:', trigger);
+      console.log('>>', 'TESTING', 'inside-eachOf', 'action:', action);
       // TODO: test the plugin and make sure it's correctly formatted
-      this.triggers[key] = value;
+      if (typeof action !== 'string' && typeof action !== 'function') {
+        // TODO: throw/emit an error about this
+      } else if (typeof action === 'function') {
+        // TODO: special requirements for function?
+        this.triggers[trigger] = action;
+      } else if (typeof action === 'string') {
+        this.triggers[trigger] = action;
+      }
       eachOf_cb(null);
     }, (eachOf_err) => {
-      if (eachOf_err) {
-        let error = new CollinsError('PluginInitError', eachOf_err);
-        throw error;
-        // this.emit('error', error, this); // TEST
-      }
+    //   if (eachOf_err) {
+    //     let error = new CollinsError('PluginInitError', eachOf_err);
+    //     throw error;
+    //     // this.emit('error', error, this); // TEST
+    //   }
       each_cb(null);
     });
   }, (each_err) => {
     // TODO: emit plugins loaded event
+    console.log('>>', 'TESTING', 'post', 'triggers:', this.triggers);
+    console.log('>>', 'TESTING', 'post', 'plugins:', this.plugins);
     this.emit('init:plugins', null, this);
   });
 };
@@ -211,7 +238,20 @@ Collins.prototype.start = function(callback) {
 
 Collins.prototype.doTrigger = function(trigger, payload, client) {
   let self = this; // INFO: instance of collins
-  var output = selftriggers[trigger];
+  let output = self.triggers[trigger];
+
+  if (typeof output === 'function') {
+
+    // TODO: execute function
+    // INFO: function ultimately needs to return a string
+    self.log('This trigger is a function to be executed.');
+    // output = output();
+  } else if (typeof output === 'string') {
+
+    // INFO: nothing needs to be done?
+    // INFO: output is already a string we can send
+  }
+
   let recipients = {
     session: (payload.from.user.session) ? [ payload.from.user.session] : [],
     channel_id: (payload.from.channel.id) ? [ payload.from.channel.id ] : []
