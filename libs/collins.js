@@ -124,9 +124,8 @@ Collins.prototype.init = function() {
       // INFO: we haven't loaded plugin
 
       let pluginPath = path.join(__dirname, '..', 'plugins', plugin + '.js');
-      let node =
       // TODO: require file
-      let loadedPlugin = require(pluginPath);
+      const loadedPlugin = require(pluginPath);
       this.plugins = _.pull(this.plugins, plugin);
       this.plugins.push(loadedPlugin);
 
