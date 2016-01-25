@@ -1,27 +1,32 @@
 'use strict';
 
-// INFO: require configuration file/folder
-const config = require('./config');
-
 // INFO: require collins module
 const Collins = require('./libs/collins');
+
+// INFO: require configuration file/folder
+const config = require('./config');
 
 // INFO: instantiate collins with config
 let collins = new Collins(config);
 
 // INFO: require plugin
-// const tenMan = require('./plugins/tenMan');
+const tenMan = require('./plugins/tenMan');
 
 // INFO: use plugin with collins
-// collins.use(tenMan);
+collins.use(tenMan);
 
 // INFO: describe what happens after you initialize collins
-collins.on('loaded', (err, self) => {
-  self.log('I\'ve successfully inicialized.');
+// collins.on('loaded', (err, self) => {
+//   self.log('I\'ve successfully inicialized.');
 
-  collins.start(function(err) {
-    console.log('collins is at your service.');
-  });
+//   collins.start(function(err) {
+//     console.log('collins is at your service.');
+//   });
+// });
+
+/* TESTING */
+collins.on('done:init', () => {
+  console.log('>>', 'APP', 'TESTING', 'done:init');
 });
 
 // INFO: initialize collins
