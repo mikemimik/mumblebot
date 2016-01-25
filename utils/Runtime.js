@@ -2,7 +2,7 @@
 
 module.exports = {
   configurationTasks: {
-    configFile: false,
+    config: false,
     plugins: false,
     triggers: false
   }

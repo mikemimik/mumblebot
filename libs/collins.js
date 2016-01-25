@@ -53,57 +53,57 @@ Collins.prototype.init = function() {
   // INFO: start loading
   Loader.start(this);
   Loader.initializeConfig(this);
-
-
+  Loader.initializePlugins(this);
+  Loader.initializeTriggers(this);
 
   /**
    * INITIALIZE PLUGINS
    */
-  console.log('>>', 'TESTING', 'pre', 'triggers:', this.triggers);
-  console.log('>>', 'TESTING', 'pre', 'plugins:', this.plugins);
-  async.each(this.plugins, (plugin, each_cb) => {
+  // console.log('>>', 'TESTING', 'pre', 'triggers:', this.triggers);
+  // console.log('>>', 'TESTING', 'pre', 'plugins:', this.plugins);
+  // async.each(this.plugins, (plugin, each_cb) => {
 
-    // TODO: if plugin is a string, we haven't loaded it yet
-    if (typeof plugin === 'string') {
-      // INFO: we haven't loaded plugin
+  //   // TODO: if plugin is a string, we haven't loaded it yet
+  //   if (typeof plugin === 'string') {
+  //     // INFO: we haven't loaded plugin
 
-      let pluginPath = path.join(__dirname, '..', 'plugins', plugin + '.js');
-      // TODO: require file
-      const loadedPlugin = require(pluginPath);
-      this.plugins = _.pull(this.plugins, plugin);
-      this.plugins.push(loadedPlugin);
+  //     let pluginPath = path.join(__dirname, '..', 'plugins', plugin + '.js');
+  //     // TODO: require file
+  //     const loadedPlugin = require(pluginPath);
+  //     this.plugins = _.pull(this.plugins, plugin);
+  //     this.plugins.push(loadedPlugin);
 
-      // TODO: replace element in array
-    }
-    console.log('>>', 'TESTING', 'inside-each', 'plugin:', plugin);
-    async.forEachOf(plugin.triggers, (action, trigger, eachOf_cb) => {
+  //     // TODO: replace element in array
+  //   }
+  //   console.log('>>', 'TESTING', 'inside-each', 'plugin:', plugin);
+  //   async.forEachOf(plugin.triggers, (action, trigger, eachOf_cb) => {
 
-      console.log('>>', 'TESTING', 'inside-eachOf', 'trigger:', trigger);
-      console.log('>>', 'TESTING', 'inside-eachOf', 'action:', action);
-      // TODO: test the plugin and make sure it's correctly formatted
-      if (typeof action !== 'string' && typeof action !== 'function') {
-        // TODO: throw/emit an error about this
-      } else if (typeof action === 'function') {
-        // TODO: special requirements for function?
-        this.triggers[trigger] = action;
-      } else if (typeof action === 'string') {
-        this.triggers[trigger] = action;
-      }
-      eachOf_cb(null);
-    }, (eachOf_err) => {
-    //   if (eachOf_err) {
-    //     let error = new CollinsError('PluginInitError', eachOf_err);
-    //     throw error;
-    //     // this.emit('error', error, this); // TEST
-    //   }
-      each_cb(null);
-    });
-  }, (each_err) => {
-    // TODO: emit plugins loaded event
-    console.log('>>', 'TESTING', 'post', 'triggers:', this.triggers);
-    console.log('>>', 'TESTING', 'post', 'plugins:', this.plugins);
-    this.emit('init:plugins', null, this);
-  });
+  //     console.log('>>', 'TESTING', 'inside-eachOf', 'trigger:', trigger);
+  //     console.log('>>', 'TESTING', 'inside-eachOf', 'action:', action);
+  //     // TODO: test the plugin and make sure it's correctly formatted
+  //     if (typeof action !== 'string' && typeof action !== 'function') {
+  //       // TODO: throw/emit an error about this
+  //     } else if (typeof action === 'function') {
+  //       // TODO: special requirements for function?
+  //       this.triggers[trigger] = action;
+  //     } else if (typeof action === 'string') {
+  //       this.triggers[trigger] = action;
+  //     }
+  //     eachOf_cb(null);
+  //   }, (eachOf_err) => {
+  //   //   if (eachOf_err) {
+  //   //     let error = new CollinsError('PluginInitError', eachOf_err);
+  //   //     throw error;
+  //   //     // this.emit('error', error, this); // TEST
+  //   //   }
+  //     each_cb(null);
+  //   });
+  // }, (each_err) => {
+  //   // TODO: emit plugins loaded event
+  //   console.log('>>', 'TESTING', 'post', 'triggers:', this.triggers);
+  //   console.log('>>', 'TESTING', 'post', 'plugins:', this.plugins);
+  //   this.emit('init:plugins', null, this);
+  // });
 };
 
 /**

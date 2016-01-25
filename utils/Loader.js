@@ -2,14 +2,12 @@
 const CollinsError = require('../libs/CollinsError');
 const events = require('wildcards');
 const async = require('async');
+const Path = require('path');
 const _ = require('lodash');
 
 class Loader {
   static start(context) {
-    let tasks = {
-      'config': false,
-      'plugins': false
-    };
+    context.log('Starting Loader...');
 
     /**
      * @summary Function to call all events starting with 'init:'
@@ -17,16 +15,19 @@ class Loader {
     events(context, 'init:*', (event, err, context) => {
 
       // INFO: listen for all init events
-      console.log('>>', 'event:', event, 'err:', err); // TEST
+      console.log('>>', 'CAUGHT EVENT:', event, 'err:', err); // TEST
 
       // INFO: component is the _actual_ event emitted
       let component = event.slice(event.indexOf(':')+1, event.length);
+      console.log('>>', 'CAUGHT EVENT:', 'component:', component); // TEST
 
       // INFO: 'check off' task as complete
-      if (_.has(tasks, component)) { tasks[component] = true; }
+      if (_.has(context.Runtime.configurationTasks, component)) {
+        context.Runtime.configurationTasks[component] = true;
+      }
 
       // INFO: asyncly check all tasks
-      async.forEachOf(tasks, (checked, task, eachOf_cb) => {
+      async.forEachOf(context.Runtime.configurationTasks, (checked, task, eachOf_cb) => {
 
         // INFO: check value of task, if false; error
         if (!checked) {
@@ -89,4 +90,41 @@ class Loader {
       });
     }
   }
+
+  static initializePlugins(context) {
+    if (context.Runtime.configurationTasks.config) {
+
+      // INFO: file has already been processed
+      context.log('Initializing Plugins...');
+      next(context);
+    } else {
+      context.log('Waiting for Configuration File Process...');
+
+      // INFO: need to wait for config file to finish processing
+      context.on('init:config', (error, context) => {
+        context.log('Initializing Plugins...');
+        next(context);
+      });
+    }
+    function next(context) {
+      async.each(context.plugins, (plugin, each_cb) => {
+        if (typeof plugin === 'string') {
+          let pluginPath = Path.join(__dirname, '..', 'plugins', plugin + '.js');
+          const loadedPlugin = require(pluginPath);
+          context.plugins = _.pull(context.plugins, plugin);
+          context.plugins.push(loadedPlugin);
+        }
+        each_cb(null);
+      }, (each_err) => {
+        context.emit('init:plugins', null, context);
+      });
+    }
+  }
+
+  static initializeTriggers(context) {
+    context.log('Initializing Triggers...');
+    // async.forEachOf
+  }
 }
+
+module.exports = Loader;
