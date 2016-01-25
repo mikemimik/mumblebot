@@ -25,7 +25,7 @@ let Collins = function Collins(config) {
   this.initialized = false;
   this.plugins = config.plugins;
   this.triggers = new Object;
-
+  this.Runtime = require('../utils/Runtime');
 };
 Util.inherits(Collins, Emitter.EventEmitter);
 
