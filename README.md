@@ -1,3 +1,33 @@
+## EMITTED EVENTS
+
+### Default Event Format
+```javascript
+@param {String} event-id
+@param {CollinsError|Error} error
+@param {Collins} context
+
+collins.on('event-id', (error, context) => {
+
+});
+```
+
+### Emitted Errors
+
+```javascript
+'use strict';
+const Collins = require('collins');
+const config = require('./config');
+
+collins.on('error', (error, context) => {
+  /**
+   * @event error
+   * @param {CollinsError} error
+   * @param {Collins} context
+   */
+});
+collins.init();
+```
+
 ## PLUGINS
 
 ```javascript
