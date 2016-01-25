@@ -42,24 +42,11 @@ class Loader {
         }
       });
     });
+    context.log('Loader:Start -> End?');
   };
 
   static initializeConfig(context) {
-
-    // INFO: check if server property exists
-    if (!context.config.server) {
-      let error = new CollinsError('ConfigError', 'Please supply server property.');
-      throw error;
-    }
-
-    // TODO: check that server uri is valid (regex)
-
-    // INFO: set defaults for config
-    _.defaults(context.config, {
-      username: 'collins',
-      plugins: [],
-      debug: false
-    });
+    context.log('Initializing Configuration File...');
 
     // INFO: check if ssl property exists
     if (context.config.ssl) {

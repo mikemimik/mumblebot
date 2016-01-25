@@ -26,6 +26,21 @@ let Collins = function Collins(config) {
   this.plugins = config.plugins;
   this.triggers = new Object;
   this.Runtime = require('../utils/Runtime');
+
+  // INFO: check if server property exists
+  if (!this.config.server) {
+    let error = new CollinsError('ConfigError', 'Please supply server property.');
+    throw error;
+  }
+
+  // TODO: check that server uri is valid (regex)
+
+  // INFO: set defaults for config
+  _.defaults(this.config, {
+    username: 'collins',
+    plugins: [],
+    debug: false
+  });
 };
 Util.inherits(Collins, Emitter.EventEmitter);
 
