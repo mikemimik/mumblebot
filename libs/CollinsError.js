@@ -26,7 +26,7 @@ class CollinsError extends ExtendableError {
     // INFO: Construct the error message.
 
     // INFO: Start with the default message common for all errors.
-    this.message = '\'' + name + '\' caused an error';
+    this.message = '\'' + this.name + '\' caused an error';
 
     let reason = data.details || data.reason;
     if (reason) {

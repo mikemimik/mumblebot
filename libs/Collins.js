@@ -18,146 +18,157 @@ const listeners = require('./listeners');
 const Loader = require('../utils/Loader');
 
 
+class Collins extends Emitter.EventEmitter {
+  constructor(config) {
+    super();
+    this.config = config;
+    this.debug = config.debug;
+    this.initialized = false;
+    this.plugins = config.plugins;
+    this.triggers = new Object;
+    this.Runtime = require('../utils/Runtime');
 
-let Collins = function Collins(config) {
-  this.config = config;
-  this.debug = config.debug;
-  this.initialized = false;
-  this.plugins = config.plugins;
-  this.triggers = new Object;
-  this.Runtime = require('../utils/Runtime');
+    if (!this.config.server) {
+      let error = new CollinsError('ConfigError', 'Please supply server property.');
+      throw error;
+    }
 
-  // INFO: check if server property exists
-  if (!this.config.server) {
-    let error = new CollinsError('ConfigError', 'Please supply server property.');
-    throw error;
+    // TODO: check that server uri is valid (regex)
+
+    // INFO: set defaults for config
+    _.defaults(this.config, {
+      username: 'collins',
+      plugins: [],
+      debug: false
+    });
   }
 
-  // TODO: check that server uri is valid (regex)
-
-  // INFO: set defaults for config
-  _.defaults(this.config, {
-    username: 'collins',
-    plugins: [],
-    debug: false
-  });
-};
-Util.inherits(Collins, Emitter.EventEmitter);
-
-/**
+  /**
  * @summary function to initialize Collins
  *
  */
-Collins.prototype.init = function() {
+  init() {
+    // INFO: catch 'done:init' event
+    events(this, 'done:init', (event, err, context) => {
+      context.initialized = true;
+      context.emit('initialized', err, context);
+    });
 
-  // INFO: catch 'done:init' event
-  events(this, 'done:init', (event, err, context) => {
-    context.initialized = true;
-    context.emit('initialized', err, context);
-  });
-
-  // INFO: start loading
-  Loader.start(this);
-  Loader.initializeConfig(this);
-  Loader.initializePlugins(this);
-  Loader.initializeTriggers(this);
-};
-
-/**
- * @summary function to log collins to console with meant for testing
- *
- * @param {object} data The message to speak.
- */
-Collins.prototype.log = function(data) {
-  let prefix = '>> Collins: ';
-  let output;
-  switch (typeof data) {
-    case 'string':
-      console.log(prefix + data);
-      break;
-    case 'Array':
-      output = data.toString();
-      console.log(prefix + output);
-      break;
-    case 'object':
-      if (_.isArray(data)) {
-        output = data.toString();
-      } else {
-        output = JSON.stringify(data);
-      }
-      console.log(prefix + output);
-      break;
+    // INFO: start loading
+    Loader.start(this);
+    Loader.initializeConfig(this);
+    Loader.initializePlugins(this);
+    Loader.initializeTriggers(this);
   }
-};
 
-/**
- * @summary function to add a plugin (middleware)
- *
- * @param {object} plugin The plugin module to include
- */
-Collins.prototype.use = function(plugin) {
-  this.plugins.push(plugin);
-};
+  /**
+   * @summary function to log collins' output to console
+   *
+   * @param {object|array|string|number} data The message to speak.
+   */
+  log(data) {
+    let prefix = '>> Collins: ';
+    let output = checkType(data);
 
-// TODO: find the appropriate place to call the callback
-Collins.prototype.start = function(callback) {
-  let self = this;
-  self.cb = (callback) ? callback : new Function();
-
-  self.log('Sir, I\'m attempting to connect.');
-
-  mumble.connect(self.config.server, self.config.ssl, mumbleCB.bind(self));
-
-  // INFO: All behaviour for Collins lives here
-  function mumbleCB(error, client) {
-    if(error) { throw new Error(error); }
-    let self = this;
-    self.log('I\'ve connected, sir.');
-
-    self.log('The server requires authentication.');
-    client.authenticate(self.config.username, self.config.password);
-    client.on('initialized', listeners.onInit.bind(self));
-    client.on('error', function(data) { console.log('error', data); });
-    client.on('disconnect', listeners.onDisconn.bind(self));
-
-    client.on('ready', listeners.onReady.bind(self));
-
+    console.log(prefix + output);
     /**
-     * INFO:
-     *  - bind function `onMessage` with
-     *    - self: instance of Collins
-     *    - _, _, _,: place holders for the params for this event
-     *    - client: instance of
+     * @summary synchronous function for checking type
      */
-    // TODO: clean this up
-    client.on('message', _.bind(listeners.onMessage, self, _, _, _, client));
-    client.on('user-connect', listeners.onUserConn.bind(self));
-    // client.on('protocol-in', onAll); // INFO: used for testing
+    function checkType(input) {
+      switch (typeof input) {
+        case 'string':
+          return input;
+          break;
+        case 'number':
+          return String(input);
+          break;
+        case 'object': // object or array
+          if (_.isArray(data)) {
+            data.forEach((item) => {
+              return checkType(item);
+            });
+          } else {
+            try {
+              return JSON.stringify(data);
+            } catch(e) {
+              return '<failed to parse object>';
+            }
+          }
+          break;
+      }
+    }
   }
-};
 
-Collins.prototype.doTrigger = function(trigger, payload, client) {
-  let self = this; // INFO: instance of collins
-  let output = self.triggers[trigger];
-
-  if (typeof output === 'function') {
-
-    // TODO: execute function
-    // INFO: function ultimately needs to return a string
-    self.log('This trigger is a function to be executed.');
-    // output = output();
-  } else if (typeof output === 'string') {
-
-    // INFO: nothing needs to be done?
-    // INFO: output is already a string we can send
+  /**
+   * @summary function to add a plugin (middleware)
+   *
+   * @param {object} plugin The plugin module to include
+   */
+  use(plugin) {
+    this.plugins.push(plugin);
   }
 
-  let recipients = {
-    session: (payload.from.user.session) ? [ payload.from.user.session] : [],
-    channel_id: (payload.from.channel.id) ? [ payload.from.channel.id ] : []
-  };
-  client.sendMessage(output, recipients);
-};
+  /**
+   * @summary function to start Collins
+   *
+   */
+  start() {
+    // TODO: find the appropriate place to call the callback
+    let self = this;
+    self.log('Sir, I\'m attempting to connect.');
+    mumble.connect(self.config.server, self.config.ssl, mumbleCB.bind(self));
+
+    // INFO: all behaviour for Collins lives here
+    function mumbleCB(error, client) {
+      if (error) { throw new Error(error); }
+      let self = this;
+      self.log('I\'ve connected, sir.');
+
+      self.log('The server requires authentication.');
+      client.authenticate(self.config.username, self.config.password);
+
+      client.on('initialized', listeners.onInit.bind(self));
+      client.on('error', (data) => { console.log('error', data); });
+      client.on('disconnect', listeners.onDisconn.bind(self));
+      client.on('ready', listeners.onReady.bind(self));
+
+      /**
+       * INFO:
+       *  - bind function `onMessage` with
+       *    - self: instance of Collins
+       *    - _, _, _,: place holders for the params for this event
+       *    - client: instance of
+       */
+      // TODO: clean this up
+      client.on('message', _.bind(listeners.onMessage, self, _, _, _, client));
+      client.on('user-connect', listeners.onUserConn.bind(self));
+      // client.on('protocol-in', onAll); // INFO: used for testing
+    }
+  }
+
+  doTrigger(trigger, payload, client) {
+    let self = this; // INFO: instance of collins
+    let output = self.triggers[trigger];
+
+    if (typeof output === 'function') {
+
+      // TODO: execute function
+      // INFO: function ultimately needs to return a string
+      self.log('Got a trigger which is a function to be executed.');
+      output = 'exec function.';
+    } else if (typeof output === 'string') {
+
+      // INFO: nothing needs to be done?
+      // INFO: output is already a string we can send
+    }
+
+    let recipients = {
+      session: (payload.from.user.session) ? [payload.from.user.session] : [],
+      channel_id: (payload.from.channel.id) ? [payload.from.channel.id] : []
+    };
+    client.sendMessage(output, recipients);
+  }
+}
 
 // INFO: used for testing
 function onAll(data) {

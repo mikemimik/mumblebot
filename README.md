@@ -35,6 +35,11 @@ collins.init();
 /* created plugin */
 /* file exists inside the ./plugins directory */
 
+/**
+ * @notes
+ * - Triggers must start with a letter
+ * - Triggers must be one word
+ */
 // collins-plugin-name.js
 'use strict';
 module.exports = {
