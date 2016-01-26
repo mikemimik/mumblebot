@@ -111,12 +111,10 @@ class Collins extends Emitter.EventEmitter {
   /**
    * @summary function to start Collins
    *
-   * @param {function} callback The callback for the app.
    */
-  start(callback) {
+  start() {
     // TODO: find the appropriate place to call the callback
     let self = this;
-    self.cb = (callback) ? callback : new Function();
     self.log('Sir, I\'m attempting to connect.');
     mumble.connect(self.config.server, self.config.ssl, mumbleCB.bind(self));
 
@@ -152,12 +150,12 @@ class Collins extends Emitter.EventEmitter {
     let self = this; // INFO: instance of collins
     let output = self.triggers[trigger];
 
-    self.log('<< testing >>');
     if (typeof output === 'function') {
 
       // TODO: execute function
       // INFO: function ultimately needs to return a string
       self.log('Got a trigger which is a function to be executed.');
+      output = 'exec function.';
     } else if (typeof output === 'string') {
 
       // INFO: nothing needs to be done?
