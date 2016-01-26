@@ -1,14 +1,11 @@
 {
   "name": "mumblebot",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "description": "a bot for mumble",
   "main": "app.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/mikemimik/mumblebot.git"
-  },
-  "bugs": {
-    "url": "https://github.com/mikemimik/mumblebot/issues"
   },
   "engines": {
     "node": ">=4.2.4"
